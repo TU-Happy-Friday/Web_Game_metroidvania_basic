@@ -4,6 +4,8 @@ node_modules/
 # Build outputs
 .next/
 pkg/
+!pkg/
+!pkg/metroidvania_wasm.js
 src/target/
 
 # Environment files
