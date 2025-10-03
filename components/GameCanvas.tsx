@@ -18,7 +18,7 @@ export default function GameCanvas({ onError }: GameCanvasProps) {
         if (!canvasRef.current) return;
 
         // Load WASM module
-        const wasmModule = await import('../pkg');
+        const wasmModule = await import('../pkg/metroidvania_wasm.js');
 
         if (!mounted) return;
 

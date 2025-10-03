@@ -1,6 +1,7 @@
 use wasm_bindgen::prelude::*;
 use web_sys::{CanvasRenderingContext2d, HtmlCanvasElement, KeyboardEvent};
 use std::f64;
+use serde::{Serialize, Deserialize};
 
 // Console logging macro
 macro_rules! console_log {
@@ -22,7 +23,7 @@ const MOVE_SPEED: f64 = 5.0;
 const TILE_SIZE: f64 = 40.0;
 
 // Vector2 struct for positions
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, Serialize, Deserialize)]
 pub struct Vector2 {
     pub x: f64,
     pub y: f64,
@@ -53,6 +54,7 @@ pub struct Enemy {
     pub move_direction: i32,
     pub move_range: f64,
     pub start_x: f64,
+    pub on_ground: bool,
 }
 
 // Game struct
@@ -109,6 +111,7 @@ impl Game {
             move_direction: 1,
             move_range: 150.0,
             start_x: 400.0,
+            on_ground: true,
         });
 
         // Create enemy 2 - jumping enemy
@@ -123,6 +126,7 @@ impl Game {
             move_direction: -1,
             move_range: 100.0,
             start_x: 600.0,
+            on_ground: true,
         });
 
         Game {
@@ -146,17 +150,17 @@ impl Game {
         self.player.velocity.x = 0.0;
 
         // Horizontal movement
-        if self.keys.get("ArrowLeft").unwrap_or(&false) {
+        if *self.keys.get("ArrowLeft").unwrap_or(&false) {
             self.player.velocity.x = -MOVE_SPEED;
             self.player.facing_right = false;
         }
-        if self.keys.get("ArrowRight").unwrap_or(&false) {
+        if *self.keys.get("ArrowRight").unwrap_or(&false) {
             self.player.velocity.x = MOVE_SPEED;
             self.player.facing_right = true;
         }
 
         // Jump
-        if self.keys.get(" ").unwrap_or(&false) && self.player.on_ground {
+        if *self.keys.get(" ").unwrap_or(&false) && self.player.on_ground {
             self.player.velocity.y = JUMP_STRENGTH;
             self.player.on_ground = false;
         }
@@ -277,11 +281,11 @@ impl Game {
         ctx.clear_rect(0.0, 0.0, self.canvas_width, self.canvas_height);
 
         // Set background
-        ctx.set_fill_style(&"#1a1a2e");
+        ctx.set_fill_style(&"#1a1a2e".into());
         ctx.fill_rect(0.0, 0.0, self.canvas_width, self.canvas_height);
 
         // Render ground
-        ctx.set_fill_style(&"#16213e");
+        ctx.set_fill_style(&"#16213e".into());
         ctx.fill_rect(0.0, self.canvas_height - 60.0, self.canvas_width, 60.0);
 
         // Render platforms
@@ -298,14 +302,14 @@ impl Game {
     }
 
     fn render_platforms(&self, ctx: &CanvasRenderingContext2d) {
-        ctx.set_fill_style(&"#0f3460");
+        ctx.set_fill_style(&"#0f3460".into());
         for platform in &self.get_platforms() {
             ctx.fill_rect(platform.x, platform.y, platform.width, platform.height);
         }
     }
 
     fn render_player(&self, ctx: &CanvasRenderingContext2d) {
-        ctx.set_fill_style(&self.player.color);
+        ctx.set_fill_style(&self.player.color.into());
         ctx.fill_rect(
             self.player.position.x,
             self.player.position.y,
@@ -314,7 +318,7 @@ impl Game {
         );
 
         // Draw simple face to show direction
-        ctx.set_fill_style(&"#ffffff");
+        ctx.set_fill_style(&"#ffffff".into());
         if self.player.facing_right {
             ctx.fill_rect(self.player.position.x + 20.0, self.player.position.y + 10.0, 4.0, 4.0);
         } else {
@@ -325,7 +329,7 @@ impl Game {
     fn render_enemies(&self, ctx: &CanvasRenderingContext2d) {
         for enemy in &self.enemies {
             // Draw enemy body
-            ctx.set_fill_style(&enemy.color);
+            ctx.set_fill_style(&enemy.color.into());
             ctx.fill_rect(
                 enemy.position.x,
                 enemy.position.y,
@@ -335,13 +339,13 @@ impl Game {
 
             // Draw health bar
             let health_percentage = enemy.health as f64 / enemy.max_health as f64;
-            ctx.set_fill_style(&"#333333");
+            ctx.set_fill_style(&"#333333".into());
             ctx.fill_rect(enemy.position.x, enemy.position.y - 8.0, enemy.width, 4.0);
-            ctx.set_fill_style(&"#00ff00");
+            ctx.set_fill_style(&"#00ff00".into());
             ctx.fill_rect(enemy.position.x, enemy.position.y - 8.0, enemy.width * health_percentage, 4.0);
 
             // Draw simple eyes
-            ctx.set_fill_style(&"#000000");
+            ctx.set_fill_style(&"#000000".into());
             ctx.fill_rect(enemy.position.x + 6.0, enemy.position.y + 8.0, 3.0, 3.0);
             ctx.fill_rect(enemy.position.x + enemy.width - 9.0, enemy.position.y + 8.0, 3.0, 3.0);
         }
@@ -349,16 +353,16 @@ impl Game {
 
     fn render_ui(&self, ctx: &CanvasRenderingContext2d) {
         // Draw game title
-        ctx.set_fill_style(&"#ffffff");
+        ctx.set_fill_style(&"#ffffff".into());
         ctx.set_font("bold 24px monospace");
         ctx.fill_text("METROIDVANIA", 20.0, 40.0).unwrap();
 
         // Draw controls
         ctx.set_font("14px monospace");
-        ctx.fill_text("Controls: ← → Move | SPACE Jump", 20.0, 65.0);
+        ctx.fill_text("Controls: ← → Move | SPACE Jump", 20.0, 65.0).unwrap();
 
         // Draw player position
-        ctx.fill_text(&format!("Position: ({:.0}, {:.0})", self.player.position.x, self.player.position.y), 20.0, 85.0);
+        ctx.fill_text(&format!("Position: ({:.0}, {:.0})", self.player.position.x, self.player.position.y), 20.0, 85.0).unwrap();
     }
 }
 
@@ -399,7 +403,12 @@ impl GameWrapper {
     }
 
     #[wasm_bindgen]
-    pub fn get_player_position(&self) -> JsValue {
-        JsValue::from_serde(&self.game.player.position).unwrap()
+    pub fn get_player_x(&self) -> f64 {
+        self.game.player.position.x
+    }
+
+    #[wasm_bindgen]
+    pub fn get_player_y(&self) -> f64 {
+        self.game.player.position.y
     }
 }
