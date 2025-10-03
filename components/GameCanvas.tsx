@@ -15,10 +15,24 @@ export default function GameCanvas({ onError }: GameCanvasProps) {
 
     const initGame = async () => {
       try {
-        if (!canvasRef.current) return;
+        if (!mounted) return;
+
+        if (!canvasRef.current) {
+          requestAnimationFrame(initGame);
+          return;
+        }
+
+        if (gameRef.current) {
+          setIsLoading(false);
+          return;
+        }
 
         // Load WASM module
         const wasmModule = await import('../pkg/metroidvania_wasm.js');
+
+        if (typeof wasmModule.default === 'function') {
+          await wasmModule.default();
+        }
 
         if (!mounted) return;
 
@@ -102,6 +116,7 @@ export default function GameCanvas({ onError }: GameCanvasProps) {
         console.error('Failed to initialize game:', error);
         if (mounted) {
           onError('Failed to load game engine. Make sure WASM is properly built.');
+          setIsLoading(false);
         }
       }
     };
