@@ -4,9 +4,10 @@
   "description": "A Metroidvania-style 2D game built with Rust and WebAssembly",
   "main": "index.js",
   "scripts": {
-    "build:wasm": "cd game && wasm-pack build --target web --out-dir ../pkg",
+    "build:wasm": "cd src && bash build.sh",
     "build": "npm run build:wasm && next build",
     "dev": "npm run build:wasm && next dev",
+    "dev:fallback": "next dev",
     "start": "next start"
   },
   "dependencies": {
