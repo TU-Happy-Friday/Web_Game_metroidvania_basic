@@ -1,0 +1,23 @@
+{
+  "name": "metroidvania-wasm-game",
+  "version": "0.1.0",
+  "description": "A Metroidvania-style 2D game built with Rust and WebAssembly",
+  "main": "index.js",
+  "scripts": {
+    "build:wasm": "cd game && wasm-pack build --target web --out-dir ../pkg",
+    "build": "npm run build:wasm && next build",
+    "dev": "npm run build:wasm && next dev",
+    "start": "next start"
+  },
+  "dependencies": {
+    "next": "^14.2.33",
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "typescript": "^5"
+  }
+}
